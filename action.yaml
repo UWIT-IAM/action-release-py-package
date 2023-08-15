@@ -1,11 +1,15 @@
-inputs:
-  credentials:
-    description: Credentials for authenticating to Gooogle via google-github-actions/auth
-    required: true
+on:
+  workflow_call:
+    inputs:
+      pypi:
+        description: URL of PyPI to push to. This does not end with "simple/"
+        type: string
+        required: true
 
-  pypi:
-    description: URL of PyPI to push to. This does not end with "simple/"
-    required: true
+    secrets:
+      credentials:
+        description: Credentials for authenticating to Gooogle via google-github-actions/auth
+        required: true
 
 jobs:
   publish-new-version:
@@ -31,7 +35,7 @@ jobs:
         # https://github.com/google-github-actions/auth#authenticating-via-service-account-key-json-1
         uses: 'google-github-actions/auth@v1'
         with:
-          credentials_json: '${{ inputs.credentials }}'
+          credentials_json: '${{ secrets.credentials }}'
           token_format: 'access_token'
 
       - name: Auth to Google Artifact Registry
