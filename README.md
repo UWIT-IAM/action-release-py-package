@@ -43,12 +43,15 @@ jobs:
           fi
 
       - name: Publish new package
-        uses: UWIT-IAM/action-release-py-package
+        uses: UWIT-IAM/action-release-py-package@v1
+        with:
+          pypi: "${{ vars.IAM_GAR_PYPI }}"
+          credentials: "${{ secrets.MCI_GCLOUD_AUTH_JSON }}"
+
 ```
 
 # Expectations
 
 * Python code is `poetry` based
     - `poetry install --with=dev` works
-* GitHub var `IAM_GAR_PYPI` exists
-* GitHub secret `MCI_GCLOUD_AUTH_JSON` exists.
+* `make ci-test` works and the return code reflects if the tests passed
