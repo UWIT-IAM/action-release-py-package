@@ -25,29 +25,11 @@ jobs:
   publish-if-new-version:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout with previous commit for pyproject.toml comparison
-        uses: actions/checkout@v3
-        with:
-          # get previous commit so we can compare pyproject.toml below
-          fetch-depth: 2
-
-      - name: Check pyproject.toml version to see if a new release is necessary
-        run: |
-          set -x  # print commands and their arguments as they are executed
-          diff=$(git diff HEAD:pyproject.toml HEAD~1:pyproject.toml) || exit 0
-          echo "$diff" | grep '+version ='
-          if [[ $? -ne 0 ]];
-          then
-            echo 'version in pyproject.toml did not change - not publishable'
-            exit 1
-          fi
-
-      - name: Publish new package
-        uses: UWIT-IAM/action-release-py-package@v1
+      - name: Publish if new package
+        uses: 'uwit-iam/action-release-py-package@main'
         with:
           pypi: "${{ vars.IAM_GAR_PYPI }}"
           credentials: "${{ secrets.MCI_GCLOUD_AUTH_JSON }}"
-
 ```
 
 # Expectations
