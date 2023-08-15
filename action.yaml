@@ -4,6 +4,9 @@ inputs:
     description: URL of PyPI to push to. This does not end with "simple/"
     type: string
     required: true
+secrets:
+  credentials:
+    required: true
 
 runs:
   using: "composite"
@@ -30,7 +33,7 @@ runs:
       # https://github.com/google-github-actions/auth#authenticating-via-service-account-key-json-1
       uses: 'google-github-actions/auth@v1'
       with:
-        credentials_json: '${{ secrets.MCI_GCLOUD_AUTH_JSON }}'
+        credentials_json: '${{ secrets.credentials }}'
         token_format: 'access_token'
 
     - name: Auth to Google Artifact Registry
