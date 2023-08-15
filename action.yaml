@@ -70,7 +70,7 @@ runs:
         # if so you can try the yolk3k package to list versions
         # https://stackoverflow.com/a/5422144/1943429
         # pip index versions will include a "INSTALLED: " line that will always match our version. Only check available versions..
-        text=$(pip index versions "$package" --index-url ${pip_pypi} | grep '^Available versions:')
+        text=$(pip index versions "$package" --index-url ${pip_pypi} | grep '^Available versions:' || echo 'Nothing found')
 
         if echo "$text" | grep "$version" ; then
           echo "::error:: $package version $version detected on PyPI - skipping upload"
