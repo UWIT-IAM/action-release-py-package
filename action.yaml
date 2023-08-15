@@ -13,11 +13,13 @@ runs:
         python-version-file: pyproject.toml
 
     - name: Install poetry
+      shell: bash
       run: |
         pip install poetry
         poetry config virtualenvs.create false
 
     - name: Install and test package
+      shell: bash
       run: |
         poetry install --with=dev  # include dev dependencies
         make ci-test
@@ -32,6 +34,7 @@ runs:
         token_format: 'access_token'
 
     - name: Auth to Google Artifact Registry
+      shell: bash
       # https://github.com/google-github-actions/auth#authenticating-to-container-registry-and-artifact-registry
       # requires role: roles/iam.serviceAccountTokenCreator
       run: |-
@@ -43,6 +46,7 @@ runs:
         pip_pypi: ${{ inputs.pypi }}simple/
         # poetry cannot upload to the "simple" interface
         poetry_pypi: ${{ inputs.pypi }}
+      shell: bash
       run: |
         set -x
         # get package name/version into env vars
