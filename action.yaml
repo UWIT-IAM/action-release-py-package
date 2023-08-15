@@ -1,73 +1,71 @@
-on:
-  workflow_call:
-    inputs:
-      pypi:
-        description: URL of PyPI to push to. This does not end with "simple/"
-        type: string
-        required: true
+name: Push Python package to GAR usign Poetry
+inputs:
+  pypi:
+    description: URL of PyPI to push to. This does not end with "simple/"
+    type: string
+    required: true
 
-jobs:
-  publish-new-version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-python@v4
-        with:
-          python-version-file: pyproject.toml
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version-file: pyproject.toml
 
-      - name: Install poetry
-        run: |
-          pip install poetry
-          poetry config virtualenvs.create false
+    - name: Install poetry
+      run: |
+        pip install poetry
+        poetry config virtualenvs.create false
 
-      - name: Install and test package
-        run: |
-          poetry install --with=dev  # include dev dependencies
-          make ci-test
+    - name: Install and test package
+      run: |
+        poetry install --with=dev  # include dev dependencies
+        make ci-test
 
-      - name: Auth to Google Cloud
-        # important! this 'auth' is referenced as `steps.auth` on the next job
-        id: auth
-        # https://github.com/google-github-actions/auth#authenticating-via-service-account-key-json-1
-        uses: 'google-github-actions/auth@v1'
-        with:
-          credentials_json: '${{ secrets.MCI_GCLOUD_AUTH_JSON }}'
-          token_format: 'access_token'
+    - name: Auth to Google Cloud
+      # important! this 'auth' is referenced as `steps.auth` on the next job
+      id: auth
+      # https://github.com/google-github-actions/auth#authenticating-via-service-account-key-json-1
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.MCI_GCLOUD_AUTH_JSON }}'
+        token_format: 'access_token'
 
-      - name: Auth to Google Artifact Registry
-        # https://github.com/google-github-actions/auth#authenticating-to-container-registry-and-artifact-registry
-        # requires role: roles/iam.serviceAccountTokenCreator
-        run: |-
-          echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
+    - name: Auth to Google Artifact Registry
+      # https://github.com/google-github-actions/auth#authenticating-to-container-registry-and-artifact-registry
+      # requires role: roles/iam.serviceAccountTokenCreator
+      run: |-
+        echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
 
-      - name: Check if package is already uploaded
-        env:
-          # quirk: pip wants to use the "simple" interface for `pip index`
-          pip_pypi: ${{ inputs.pypi }}simple/
-          # poetry cannot upload to the "simple" interface
-          poetry_pypi: ${{ inputs.pypi }}
-        run: |
-          set -x
-          # get package name/version into env vars
-          # https://stackoverflow.com/a/11100252/1943429
-          read package version < <( poetry version --no-ansi )
+    - name: Check if package is already uploaded
+      env:
+        # quirk: pip wants to use the "simple" interface for `pip index`
+        pip_pypi: ${{ inputs.pypi }}simple/
+        # poetry cannot upload to the "simple" interface
+        poetry_pypi: ${{ inputs.pypi }}
+      run: |
+        set -x
+        # get package name/version into env vars
+        # https://stackoverflow.com/a/11100252/1943429
+        read package version < <( poetry version --no-ansi )
 
-          # install keyring so pip can talk to GAR PyPI
-          pip install keyrings.google-artifactregistry-auth
+        # install keyring so pip can talk to GAR PyPI
+        pip install keyrings.google-artifactregistry-auth
 
-          # search PyPI.
-          # note: pip index is an "experimental" command and may go away...
-          # if so you can try the yolk3k package to list versions
-          # https://stackoverflow.com/a/5422144/1943429
-          # pip index versions will include a "INSTALLED: " line that will always match our version. Only check available versions..
-          text=$(pip index versions "$package" --index-url ${pip_pypi} | grep '^Available versions:')
+        # search PyPI.
+        # note: pip index is an "experimental" command and may go away...
+        # if so you can try the yolk3k package to list versions
+        # https://stackoverflow.com/a/5422144/1943429
+        # pip index versions will include a "INSTALLED: " line that will always match our version. Only check available versions..
+        text=$(pip index versions "$package" --index-url ${pip_pypi} | grep '^Available versions:')
 
-          if echo "$text" | grep "$version" ; then
-            echo "::error:: $package version $version detected on PyPI - skipping upload"
-            exit 1
-          else
-            echo "$package version $version not on PyPI yet - building and uploading"
-          fi
+        if echo "$text" | grep "$version" ; then
+          echo "::error:: $package version $version detected on PyPI - skipping upload"
+          exit 1
+        else
+          echo "$package version $version not on PyPI yet - building and uploading"
+        fi
 
-          # configure poetry to be able to talk to gar and build/push new package
-          poetry config repositories.gar ${poetry_pypi}
-          poetry publish --build -r gar
+        # configure poetry to be able to talk to gar and build/push new package
+        poetry config repositories.gar ${poetry_pypi}
+        poetry publish --build -r gar
