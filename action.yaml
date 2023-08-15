@@ -15,7 +15,7 @@ runs:
     - uses: actions/checkout@v3
       with:
         ref: ${{ github.ref }}
-        token: ${{ env.github_token }}
+        token: ${{ github.token }}
 
     - uses: actions/setup-python@v4
       with:
