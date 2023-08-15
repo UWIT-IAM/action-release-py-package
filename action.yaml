@@ -1,3 +1,12 @@
+inputs:
+  credentials:
+    description: Credentials for authenticating to Gooogle via google-github-actions/auth
+    required: true
+
+  pypi:
+    description: URL of PyPI to push to. This does not end with "simple/"
+    required: true
+
 jobs:
   publish-new-version:
     runs-on: ubuntu-latest
@@ -22,7 +31,7 @@ jobs:
         # https://github.com/google-github-actions/auth#authenticating-via-service-account-key-json-1
         uses: 'google-github-actions/auth@v1'
         with:
-          credentials_json: '${{ secrets.MCI_GCLOUD_AUTH_JSON }}'
+          credentials_json: '${{ inputs.credentials }}'
           token_format: 'access_token'
 
       - name: Auth to Google Artifact Registry
@@ -34,9 +43,9 @@ jobs:
       - name: Check if package is already uploaded
         env:
           # quirk: pip wants to use the "simple" interface for `pip index`
-          pip_pypi: ${{ vars.IAM_GAR_PYPI }}simple/
+          pip_pypi: ${{ inputs.pypi }}simple/
           # poetry cannot upload to the "simple" interface
-          poetry_pypi: ${{ vars.IAM_GAR_PYPI }}
+          poetry_pypi: ${{ inputs.pypi }}
         run: |
           set -x
           # get package name/version into env vars
