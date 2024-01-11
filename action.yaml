@@ -64,7 +64,7 @@ runs:
       run: |-
         echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
 
-    - name: Check if package is already uploaded
+    - name: Release if new version
       env:
         # quirk: pip wants to use the "simple" interface for `pip index`
         pip_pypi: ${{ inputs.pypi }}simple/
