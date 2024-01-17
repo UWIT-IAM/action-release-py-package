@@ -28,21 +28,10 @@ runs:
         pip install poetry
         poetry config virtualenvs.create false
 
-    - name: Auth to Google Cloud
-      # important! this 'auth' is referenced as `steps.auth` on the next job
-      id: auth
-      # https://github.com/google-github-actions/auth#authenticating-via-service-account-key-json-1
-      uses: 'google-github-actions/auth@v1'
+    - name: Auth to Google Cloud + Artifact Registry
+      uses: 'uwit-iam/action-auth-artifact-registry@main'
       with:
-        credentials_json: '${{ inputs.credentials }}'
-        token_format: 'access_token'
-
-    - name: Auth to Google Artifact Registry
-      shell: bash
-      # https://github.com/google-github-actions/auth#authenticating-to-container-registry-and-artifact-registry
-      # requires role: roles/iam.serviceAccountTokenCreator
-      run: |-
-        echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
+        credentials: "${{ inputs.credentials }}"
 
     - name: Install dependencies for pip to auth against Google Artifact Registry
       shell: bash
