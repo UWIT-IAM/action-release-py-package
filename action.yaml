@@ -44,6 +44,12 @@ runs:
       run: |-
         echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
 
+    - name: Install dependencies for pip to auth against Google Artifact Registry
+      shell: bash
+      run: |
+        # install keyring so pip can talk to GAR PyPI
+        pip install keyrings.google-artifactregistry-auth
+
     - name: Install and test package
       shell: bash
       run: |
@@ -62,9 +68,6 @@ runs:
         # get package name/version into env vars
         # https://stackoverflow.com/a/11100252/1943429
         read package version < <( poetry version --no-ansi )
-
-        # install keyring so pip can talk to GAR PyPI
-        pip install keyrings.google-artifactregistry-auth
 
         # search PyPI.
         # note: pip index is an "experimental" command and may go away...
