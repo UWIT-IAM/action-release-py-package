@@ -42,12 +42,6 @@ runs:
         pip install poetry
         poetry config virtualenvs.create false
 
-    - name: Install and test package
-      shell: bash
-      run: |
-        poetry install --with=dev  # include dev dependencies
-        make ci-test
-
     - name: Auth to Google Cloud
       # important! this 'auth' is referenced as `steps.auth` on the next job
       id: auth
@@ -63,6 +57,12 @@ runs:
       # requires role: roles/iam.serviceAccountTokenCreator
       run: |-
         echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://us-docker.pkg.dev
+
+    - name: Install and test package
+      shell: bash
+      run: |
+        poetry install --with=dev  # include dev dependencies
+        make ci-test
 
     - name: Release if new version
       env:
